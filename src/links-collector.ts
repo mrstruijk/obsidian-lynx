@@ -1,7 +1,7 @@
 import { App, MetadataCache, Reference, TFile } from 'obsidian';
 
 interface MetadataCacheInternal extends MetadataCache {
-	getBacklinksForFile(file: TFile): { data: Record<string, unknown[]> } | null;
+	getBacklinksForFile(file: TFile): { data: Map<string, Reference[]> } | null;
 }
 
 export type LinkType = 'incoming' | 'outgoing';
@@ -65,7 +65,7 @@ export function collectLinks(
 	const backlinks = (app.metadataCache as MetadataCacheInternal).getBacklinksForFile(file);
 	if (backlinks?.data) {
 		const seen = new Set<string>();
-		for (const sourcePath of Object.keys(backlinks.data)) {
+		for (const sourcePath of backlinks.data.keys()) {
 			const key = sourcePath.toLowerCase();
 			if (seen.has(key)) continue;
 			seen.add(key);
