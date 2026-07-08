@@ -1,9 +1,14 @@
-import { Plugin, TFile } from 'obsidian';
+import { Plugin, TFile, debounce } from 'obsidian';
 import { DEFAULT_SETTINGS, LynxSettings, LynxSettingTab } from './settings';
 import { LynxLinksView, VIEW_TYPE } from './links-view';
 
 export default class LynxPlugin extends Plugin {
 	settings!: LynxSettings;
+	private debouncedUpdateLinksView = debounce(
+		() => this.updateLinksView(this.app.workspace.getActiveFile()),
+		250,
+		true,
+	);
 
 	async onload() {
 		await this.loadSettings();
@@ -24,6 +29,22 @@ export default class LynxPlugin extends Plugin {
 			}),
 		);
 
+		this.registerEvent(
+			this.app.metadataCache.on('changed', (file) => {
+				if (file === this.app.workspace.getActiveFile()) {
+					this.debouncedUpdateLinksView();
+				}
+			}),
+		);
+
+		this.registerEvent(
+			this.app.vault.on('modify', (file) => {
+				if (file instanceof TFile && file === this.app.workspace.getActiveFile()) {
+					this.debouncedUpdateLinksView();
+				}
+			}),
+		);
+
 		if (this.settings.openOnStartup) {
 			this.app.workspace.onLayoutReady(() => {
 				void this.openLinksView();
@@ -31,7 +52,9 @@ export default class LynxPlugin extends Plugin {
 		}
 	}
 
-	onunload(): void {}
+	onunload(): void {
+		this.debouncedUpdateLinksView.cancel();
+	}
 
 	async loadSettings() {
 		this.settings = Object.assign(
