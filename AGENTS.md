@@ -19,7 +19,7 @@ TypeScript only checks `src/**/*.ts` (`tsconfig.json:18`). Root `.mjs`/`.mts` fi
 ## Architecture
 - `src/main.ts` — `LynxPlugin`; registers the `lynx-links-view` view, the **"Open links view"** command, the settings tab, and a `file-open` event listener.
 - `src/links-view.ts` — `ItemView` subclass that renders the right-sidebar links list and sort controls.
-- `src/links-collector.ts` — builds the combined incoming/outgoing `LinkItem[]` list from Obsidian's metadata cache.
+- `src/links-collector.ts` — builds the combined incoming/outgoing `LinkItem[]` list from Obsidian's metadata cache. Outgoing links include both body links (`cache.links`) and frontmatter links (`cache.frontmatterLinks`); each `LinkItem` carries `source: 'body' | 'frontmatter'` so future UI can distinguish them. Dedup is by lowercase path across both sources.
 - `src/settings.ts` — settings interface, defaults, and the settings tab UI.
 
 ## Obsidian constraints
@@ -47,6 +47,12 @@ TypeScript only checks `src/**/*.ts` (`tsconfig.json:18`). Root `.mjs`/`.mts` fi
 
 ## Known lint warnings
 - `obsidianmd/settings-tab/prefer-setting-definitions` — the settings tab uses the legacy imperative API. Adopting the declarative settings API (Obsidian 1.13+) would make settings searchable globally, but it is optional.
+
+## LSP
+- Requires `OPENCODE_EXPERIMENTAL=true` (or `OPENCODE_EXPERIMENTAL_LSP_TOOL=true`) in shell env — set in `~/.zshrc`.
+- TypeScript LSP uses `typescript-language-server` (Homebrew, v5.3.0). Config in `opencode.jsonc` `lsp.typescript`.
+- Tool name is `lsp` (not `lsp_diagnostics`). Operations: `goToDefinition`, `findReferences`, `hover`, `documentSymbol`, `workspaceSymbol`, `goToImplementation`, `prepareCallHierarchy`, `incomingCalls`, `outgoingCalls`.
+- LSP server starts lazily when a `.ts` file is first read in the session.
 
 ## References
 - `README.md` for first-time setup and detailed release steps.

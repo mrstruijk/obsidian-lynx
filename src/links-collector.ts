@@ -1,4 +1,4 @@
-import { App, MetadataCache, TFile } from 'obsidian';
+import { App, MetadataCache, Reference, TFile } from 'obsidian';
 
 interface MetadataCacheInternal extends MetadataCache {
 	getBacklinksForFile(file: TFile): { data: Record<string, unknown[]> } | null;
@@ -13,6 +13,7 @@ export interface LinkItem {
 	resolved: boolean;
 	file?: TFile;
 	mtime: number;
+	source: 'body' | 'frontmatter';
 }
 
 export interface LynxCollectorSettings {
@@ -27,28 +28,38 @@ export function collectLinks(
 	const items: LinkItem[] = [];
 
 	const cache = app.metadataCache.getFileCache(file);
-	if (cache?.links) {
+	if (cache) {
 		const seen = new Set<string>();
-		for (const link of cache.links) {
-			const dest = app.metadataCache.getFirstLinkpathDest(link.link, file.path);
-			const resolved = dest instanceof TFile;
-			const path = resolved ? dest.path : link.link;
 
-			const key = path.toLowerCase();
-			if (seen.has(key)) continue;
-			seen.add(key);
+		const addOutgoingLinks = (
+			refs: Reference[],
+			source: 'body' | 'frontmatter',
+		): void => {
+			for (const link of refs) {
+				const dest = app.metadataCache.getFirstLinkpathDest(link.link, file.path);
+				const resolved = dest instanceof TFile;
+				const path = resolved ? dest.path : link.link;
 
-			if (!resolved && !settings.showUnresolved) continue;
+				const key = path.toLowerCase();
+				if (seen.has(key)) continue;
+				seen.add(key);
 
-			items.push({
-				type: 'outgoing',
-				path,
-				displayName: link.displayText || link.link,
-				resolved,
-				file: resolved ? dest : undefined,
-				mtime: resolved ? dest.stat.mtime : 0,
-			});
-		}
+				if (!resolved && !settings.showUnresolved) continue;
+
+				items.push({
+					type: 'outgoing',
+					path,
+					displayName: link.displayText || link.link,
+					resolved,
+					file: resolved ? dest : undefined,
+					mtime: resolved ? dest.stat.mtime : 0,
+					source,
+				});
+			}
+		};
+
+		addOutgoingLinks(cache.links ?? [], 'body');
+		addOutgoingLinks(cache.frontmatterLinks ?? [], 'frontmatter');
 	}
 
 	const backlinks = (app.metadataCache as MetadataCacheInternal).getBacklinksForFile(file);
@@ -69,6 +80,7 @@ export function collectLinks(
 				resolved: true,
 				file: sourceFile,
 				mtime: sourceFile.stat.mtime,
+				source: 'body',
 			});
 		}
 	}
