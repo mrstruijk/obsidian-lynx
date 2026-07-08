@@ -10,8 +10,42 @@
 	margin: 0 0 var(--size-4-1) 0;
 }
 
-.lynx-links-controls {
+.lynx-links-toolbar {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-2);
 	margin-bottom: var(--size-4-2);
+}
+
+.lynx-history-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border-radius: var(--radius-s);
+	cursor: pointer;
+	color: var(--text-muted);
+}
+
+.lynx-history-btn:hover:not(.is-disabled) {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.lynx-history-btn.is-disabled {
+	opacity: 0.4;
+	cursor: default;
+	pointer-events: none;
+}
+
+.lynx-history-btn svg {
+	width: 16px;
+	height: 16px;
+}
+
+.lynx-links-controls {
+	flex: 1;
 }
 
 .lynx-links-controls select {

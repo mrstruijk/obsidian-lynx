@@ -18,7 +18,7 @@ TypeScript only checks `src/**/*.ts` (`tsconfig.json:18`). Root `.mjs`/`.mts` fi
 
 ## Architecture
 - `src/main.ts` — `LynxPlugin`; registers the `lynx-links-view` view, the **"Open links view"** command, the settings tab, and event listeners for `file-open` (immediate refresh), `metadata-cache:changed` (live link preview while typing, debounced 250ms), and `vault:modify` (refresh on save, debounced). All refresh events are filtered to the active file only.
-- `src/links-view.ts` — `ItemView` subclass that renders the right-sidebar links list and sort controls.
+- `src/links-view.ts` — `ItemView` subclass that renders the right-sidebar links list, sort controls, and back/forward history buttons. Maintains an inline history stack (`history: TFile[]`, `historyIndex`) that tracks files visited via the Lynx view or external navigation. Back/forward buttons navigate the stack and open files in the main editor via `openLinkText`, integrating with Obsidian's global history.
 - `src/links-collector.ts` — builds the combined incoming/outgoing `LinkItem[]` list from Obsidian's metadata cache. Outgoing links include both body links (`cache.links`) and frontmatter links (`cache.frontmatterLinks`); each `LinkItem` carries `source: 'body' | 'frontmatter'` so future UI can distinguish them. Dedup is by lowercase path across both sources.
 - `src/settings.ts` — settings interface, defaults, and the declarative settings tab UI via `getSettingDefinitions()`.
 
@@ -44,6 +44,7 @@ TypeScript only checks `src/**/*.ts` (`tsconfig.json:18`). Root `.mjs`/`.mts` fi
 ## Manual testing
 - Copy `main.js`, `manifest.json`, and `styles.css` to `<vault>/.obsidian/plugins/lynx/`, reload Obsidian, enable in **Settings → Community plugins**.
 - Run **"Open links view"** from the command palette and switch between notes to verify the list updates.
+- Click a link in the Lynx list → the main editor opens that note. Click the back button (◀) → returns to the previous note. Click forward (▶) → goes forward again.
 - Open **Settings → Community plugins → Lynx** and confirm the three settings render and values persist.
 - Use the settings search box to verify each Lynx setting appears and is searchable.
 

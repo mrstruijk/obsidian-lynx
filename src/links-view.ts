@@ -12,6 +12,11 @@ export class LynxLinksView extends ItemView {
 	private headerTitle!: HTMLElement;
 	private sortSelect!: HTMLSelectElement;
 	private listContainer!: HTMLElement;
+	private backButton!: HTMLElement;
+	private forwardButton!: HTMLElement;
+	private history: TFile[] = [];
+	private historyIndex = -1;
+	private navigatingHistory = false;
 
 	constructor(leaf: WorkspaceLeaf, plugin: LynxPlugin) {
 		super(leaf);
@@ -38,7 +43,19 @@ export class LynxLinksView extends ItemView {
 		const header = this.contentEl.createDiv({ cls: 'lynx-links-header' });
 		this.headerTitle = header.createEl('h4', { text: 'No active note' });
 
-		const controls = this.contentEl.createDiv({ cls: 'lynx-links-controls' });
+		const toolbar = this.contentEl.createDiv({ cls: 'lynx-links-toolbar' });
+
+		this.backButton = toolbar.createSpan({ cls: 'lynx-history-btn' });
+		setIcon(this.backButton, 'chevron-left');
+		this.backButton.setAttribute('aria-label', 'Back');
+		this.backButton.addEventListener('click', () => this.goBack());
+
+		this.forwardButton = toolbar.createSpan({ cls: 'lynx-history-btn' });
+		setIcon(this.forwardButton, 'chevron-right');
+		this.forwardButton.setAttribute('aria-label', 'Forward');
+		this.forwardButton.addEventListener('click', () => this.goForward());
+
+		const controls = toolbar.createDiv({ cls: 'lynx-links-controls' });
 		this.sortSelect = controls.createEl('select');
 
 		const options: Record<SortOrder, string> = {
@@ -69,6 +86,12 @@ export class LynxLinksView extends ItemView {
 
 	update(file: TFile | null): void {
 		this.currentFile = file;
+
+		// Seed history on first update or when file changes externally
+		if (file && !this.navigatingHistory) {
+			this.pushHistory(file.path);
+		}
+
 		this.render();
 	}
 
@@ -118,6 +141,7 @@ export class LynxLinksView extends ItemView {
 		});
 
 		row.addEventListener('click', () => {
+			this.pushHistory(item.path);
 			void this.plugin.app.workspace.openLinkText(
 				item.path,
 				this.currentFile?.path ?? '',
@@ -140,6 +164,62 @@ export class LynxLinksView extends ItemView {
 			);
 			menu.showAtMouseEvent(event);
 		});
+	}
+
+	private pushHistory(path: string): void {
+		const file = this.plugin.app.vault.getAbstractFileByPath(path);
+		if (!(file instanceof TFile)) return;
+
+		// Don't push duplicate consecutive entries
+		if (this.historyIndex >= 0 && this.history[this.historyIndex]?.path === file.path) {
+			return;
+		}
+
+		// Truncate forward history
+		this.history = this.history.slice(0, this.historyIndex + 1);
+		this.history.push(file);
+		this.historyIndex = this.history.length - 1;
+		this.updateHistoryButtons();
+	}
+
+	private goBack(): void {
+		if (this.historyIndex <= 0) return;
+		this.historyIndex--;
+		const file = this.history[this.historyIndex];
+		if (!file) return;
+
+		this.navigatingHistory = true;
+		void this.plugin.app.workspace.openLinkText(file.path, '').finally(() => {
+			this.navigatingHistory = false;
+		});
+		this.updateHistoryButtons();
+	}
+
+	private goForward(): void {
+		if (this.historyIndex >= this.history.length - 1) return;
+		this.historyIndex++;
+		const file = this.history[this.historyIndex];
+		if (!file) return;
+
+		this.navigatingHistory = true;
+		void this.plugin.app.workspace.openLinkText(file.path, '').finally(() => {
+			this.navigatingHistory = false;
+		});
+		this.updateHistoryButtons();
+	}
+
+	private updateHistoryButtons(): void {
+		if (this.historyIndex <= 0) {
+			this.backButton.addClass('is-disabled');
+		} else {
+			this.backButton.removeClass('is-disabled');
+		}
+
+		if (this.historyIndex >= this.history.length - 1) {
+			this.forwardButton.addClass('is-disabled');
+		} else {
+			this.forwardButton.removeClass('is-disabled');
+		}
 	}
 }
 
