@@ -1,9 +1,9 @@
 {
-	"id": "lynx",
-	"name": "Lynx",
+	"id": "obsidian-lynx",
+	"name": "lynx",
 	"version": "1.0.0",
 	"minAppVersion": "1.7.2",
 	"description": "A comprehensive incoming and outgoing links view for Obsidian notes.",
-	"author": "Lynx",
+	"author": "Maarten R. Struijk Wilbrink",
 	"isDesktopOnly": false
 }
