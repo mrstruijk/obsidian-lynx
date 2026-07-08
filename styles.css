@@ -1,8 +1,66 @@
-/*
+.lynx-links-view {
+	padding: var(--size-4-2);
+}
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.lynx-links-header {
+	margin-bottom: var(--size-4-2);
+}
 
-If your plugin does not need CSS, delete this file.
+.lynx-links-header h4 {
+	margin: 0 0 var(--size-4-1) 0;
+}
 
-*/
+.lynx-links-controls {
+	margin-bottom: var(--size-4-2);
+}
+
+.lynx-links-controls select {
+	width: 100%;
+}
+
+.lynx-links-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-2-2);
+}
+
+.lynx-link {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-2);
+	cursor: pointer;
+	padding: var(--size-2-2);
+	border-radius: var(--radius-s);
+}
+
+.lynx-link:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.lynx-link-icon {
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
+}
+
+.lynx-link-icon svg {
+	width: 16px;
+	height: 16px;
+}
+
+.lynx-link--incoming {
+	color: var(--link-color);
+}
+
+.lynx-link--outgoing {
+	color: var(--text-accent);
+}
+
+.lynx-link--unresolved {
+	opacity: 0.6;
+}
+
+.lynx-links-empty {
+	color: var(--text-muted);
+	font-size: var(--font-smaller);
+}
