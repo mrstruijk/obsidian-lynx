@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting } from 'obsidian';
+import { App, PluginSettingTab, type SettingDefinitionItem } from 'obsidian';
 import LynxPlugin from './main';
 
 export type SortOrder =
@@ -29,50 +29,49 @@ export class LynxSettingTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
-	display(): void {
-		const { containerEl } = this;
-		containerEl.empty();
+	getControlValue(key: string): unknown {
+		return this.plugin.settings[key as keyof LynxSettings];
+	}
 
-		new Setting(containerEl)
-			.setName('Default sort order')
-			.setDesc('How links are ordered when the view first opens.')
-			.addDropdown((dropdown) =>
-				dropdown
-					.addOption('modified-desc', 'Modified date (newest first)')
-					.addOption('modified-asc', 'Modified date (oldest first)')
-					.addOption('name-asc', 'Name (a → z)')
-					.addOption('name-desc', 'Name (z → a)')
-					.addOption('type-asc', 'Type (incoming first)')
-					.addOption('type-desc', 'Type (outgoing first)')
-					.setValue(this.plugin.settings.defaultSort)
-					.onChange(async (value) => {
-						this.plugin.settings.defaultSort = value as SortOrder;
-						await this.plugin.saveSettings();
-					}),
-			);
+	async setControlValue(key: string, value: unknown): Promise<void> {
+		(this.plugin.settings as unknown as Record<string, unknown>)[key] = value;
+		await this.plugin.saveSettings();
+	}
 
-		new Setting(containerEl)
-			.setName('Show unresolved links')
-			.setDesc('Include links that do not yet point to an existing note.')
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.showUnresolved)
-					.onChange(async (value) => {
-						this.plugin.settings.showUnresolved = value;
-						await this.plugin.saveSettings();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName('Open on startup')
-			.setDesc('Open the links view automatically when Obsidian loads.')
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.openOnStartup)
-					.onChange(async (value) => {
-						this.plugin.settings.openOnStartup = value;
-						await this.plugin.saveSettings();
-					}),
-			);
+	getSettingDefinitions(): SettingDefinitionItem<keyof LynxSettings>[] {
+		return [
+			{
+				name: 'Default sort order',
+				desc: 'How links are ordered when the view first opens.',
+				control: {
+					type: 'dropdown',
+					key: 'defaultSort',
+					options: {
+						'modified-desc': 'Modified date (newest first)',
+						'modified-asc': 'Modified date (oldest first)',
+						'name-asc': 'Name (a → z)',
+						'name-desc': 'Name (z → a)',
+						'type-asc': 'Type (incoming first)',
+						'type-desc': 'Type (outgoing first)',
+					},
+				},
+			},
+			{
+				name: 'Show unresolved links',
+				desc: 'Include links that do not yet point to an existing note.',
+				control: {
+					type: 'toggle',
+					key: 'showUnresolved',
+				},
+			},
+			{
+				name: 'Open on startup',
+				desc: 'Open the links view automatically when Obsidian loads.',
+				control: {
+					type: 'toggle',
+					key: 'openOnStartup',
+				},
+			},
+		];
 	}
 }
