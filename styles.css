@@ -83,3 +83,31 @@
 	color: var(--text-muted);
 	font-size: var(--font-smaller);
 }
+
+.lynx-suggestion {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-2);
+}
+
+.lynx-suggestion-icon {
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
+}
+
+.lynx-suggestion-icon svg {
+	width: 16px;
+	height: 16px;
+	color: var(--lynx-link-color);
+}
+
+.lynx-suggestion-content {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.lynx-suggestion-title {
+	font-size: var(--font-ui-medium);
+}

@@ -4,6 +4,13 @@ interface MetadataCacheInternal extends MetadataCache {
 	getBacklinksForFile(file: TFile): { data: Map<string, Reference[]> } | null;
 }
 
+function getLinkBasename(linkText: string): string {
+	// Strip optional block/heading subpath, extension, and parent folders.
+	const base = linkText.split(/[#^]/, 1)[0] ?? linkText;
+	const name = base.split('/').pop() ?? base;
+	return name.replace(/\.md$/i, '');
+}
+
 export type LinkType = 'incoming' | 'outgoing';
 
 export interface LinkItem {
@@ -49,7 +56,7 @@ export function collectLinks(
 				items.push({
 					type: 'outgoing',
 					path,
-					displayName: link.displayText || link.link,
+					displayName: resolved ? dest.basename : getLinkBasename(link.link),
 					resolved,
 					file: resolved ? dest : undefined,
 					mtime: resolved ? dest.stat.mtime : 0,
@@ -65,7 +72,7 @@ export function collectLinks(
 	const backlinks = (app.metadataCache as MetadataCacheInternal).getBacklinksForFile(file);
 	if (backlinks?.data) {
 		const seen = new Set<string>();
-		for (const [sourcePath, references] of backlinks.data.entries()) {
+		for (const [sourcePath] of backlinks.data.entries()) {
 			const key = sourcePath.toLowerCase();
 			if (seen.has(key)) continue;
 			seen.add(key);
@@ -73,14 +80,10 @@ export function collectLinks(
 			const sourceFile = app.vault.getAbstractFileByPath(sourcePath);
 			if (!(sourceFile instanceof TFile)) continue;
 
-			const displayName =
-				references.find((ref) => ref.displayText)?.displayText ??
-				sourceFile.basename;
-
 			items.push({
 				type: 'incoming',
 				path: sourcePath,
-				displayName,
+				displayName: sourceFile.basename,
 				resolved: true,
 				file: sourceFile,
 				mtime: sourceFile.stat.mtime,

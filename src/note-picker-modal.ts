@@ -1,6 +1,8 @@
-import { App, SuggestModal, TFile } from 'obsidian';
+import { App, setIcon, SuggestModal, TFile } from 'obsidian';
 import LynxPlugin from './main';
 import { collectLinks, LinkItem } from './links-collector';
+
+const LYNX_LINK_COLOR_VAR = '--lynx-link-color';
 
 export class LynxNotePickerModal extends SuggestModal<LinkItem> {
 	plugin: LynxPlugin;
@@ -27,10 +29,25 @@ export class LynxNotePickerModal extends SuggestModal<LinkItem> {
 	}
 
 	renderSuggestion(item: LinkItem, el: HTMLElement): void {
-		el.createDiv({ text: item.displayName });
-		el.createDiv({
-			text: item.path,
-			cls: 'suggestion-note',
+		el.addClass('lynx-suggestion');
+		el.style.setProperty(
+			LYNX_LINK_COLOR_VAR,
+			item.type === 'incoming'
+				? this.plugin.settings.incomingColor
+				: this.plugin.settings.outgoingColor,
+		);
+
+		const icon = el.createSpan({ cls: 'lynx-suggestion-icon' });
+		setIcon(
+			icon,
+			item.type === 'incoming'
+				? this.plugin.settings.incomingIcon
+				: this.plugin.settings.outgoingIcon,
+		);
+
+		el.createSpan({
+			cls: 'lynx-suggestion-title',
+			text: item.displayName,
 		});
 	}
 
