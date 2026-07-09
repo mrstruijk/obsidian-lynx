@@ -39,7 +39,10 @@ export default class LynxPlugin extends Plugin {
 
 		this.registerEvent(
 			this.app.vault.on('modify', (file) => {
-				if (file instanceof TFile && file === this.app.workspace.getActiveFile()) {
+				if (
+					file instanceof TFile &&
+					file === this.app.workspace.getActiveFile()
+				) {
 					this.debouncedUpdateLinksView();
 				}
 			}),

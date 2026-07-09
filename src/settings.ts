@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, type SettingDefinitionItem } from 'obsidian';
+import * as obsidian from 'obsidian';
 import LynxPlugin from './main';
 
 export type SortOrder =
@@ -21,10 +21,13 @@ export const DEFAULT_SETTINGS: LynxSettings = {
 	openOnStartup: false,
 };
 
-export class LynxSettingTab extends PluginSettingTab {
+export class LynxSettingTab extends obsidian.PluginSettingTab {
+	display(): void {
+		throw new Error('Method not implemented.');
+	}
 	plugin: LynxPlugin;
 
-	constructor(app: App, plugin: LynxPlugin) {
+	constructor(app: obsidian.App, plugin: LynxPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -34,11 +37,14 @@ export class LynxSettingTab extends PluginSettingTab {
 	}
 
 	async setControlValue(key: string, value: unknown): Promise<void> {
-		(this.plugin.settings as unknown as Record<string, unknown>)[key] = value;
+		(this.plugin.settings as unknown as Record<string, unknown>)[key] =
+			value;
 		await this.plugin.saveSettings();
 	}
 
-	getSettingDefinitions(): SettingDefinitionItem<keyof LynxSettings>[] {
+	getSettingDefinitions(): obsidian.SettingDefinitionItem<
+		keyof LynxSettings
+	>[] {
 		return [
 			{
 				name: 'Default sort order',
