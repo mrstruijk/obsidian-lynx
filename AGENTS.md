@@ -20,11 +20,11 @@ TypeScript only checks `src/**/*.ts` (`tsconfig.json:18`). Root `.mjs`/`.mts` fi
 - `src/main.ts` — `LynxPlugin`; registers the `lynx-links-view` view, the **"Open links view"** command, the settings tab, and event listeners for `file-open` (immediate refresh), `metadata-cache:changed` (live link preview while typing, debounced 250ms), and `vault:modify` (refresh on save, debounced). All refresh events are filtered to the active file only.
 - `src/links-view.ts` — `ItemView` subclass that renders the right-sidebar links list, sort controls, and back/forward history buttons. Maintains an inline history stack (`history: TFile[]`, `historyIndex`) that tracks files visited via the Lynx view or external navigation. Back/forward buttons navigate the stack and open files in the main editor via `openLinkText`, integrating with Obsidian's global history.
 - `src/links-collector.ts` — builds the combined incoming/outgoing `LinkItem[]` list from Obsidian's metadata cache. Outgoing links include both body links (`cache.links`) and frontmatter links (`cache.frontmatterLinks`); each `LinkItem` carries `source: 'body' | 'frontmatter'` so future UI can distinguish them. Dedup is by lowercase path across both sources.
-- `src/settings.ts` — settings interface, defaults, and the declarative settings tab UI via `getSettingDefinitions()`.
+- `src/settings.ts` — settings interface, defaults, and the imperative settings tab UI via `PluginSettingTab.display()` using `obsidian.Setting`.
 
 ## Obsidian constraints
 - `manifest.json:2` — plugin id is `lynx`. Never change the `id` after release.
-- `manifest.json:5` — `minAppVersion` is `1.13.0` because the settings tab uses the declarative settings API (`PluginSettingTab.getSettingDefinitions`); bump this if you adopt newer APIs, or `eslint-plugin-obsidianmd/no-unsupported-api` will fail the build.
+- `manifest.json:5` — `minAppVersion` is `1.7.2`, the floor required by `Workspace.revealLeaf` and other APIs used across the plugin. The settings tab intentionally uses the imperative `PluginSettingTab.display()` / `obsidian.Setting` API (compatible with this floor) rather than the declarative `getSettingDefinitions()` API, which requires `1.13.0`.
 - `isDesktopOnly` is `false` (`manifest.json:8`); avoid Node/Electron APIs.
 - Do not bundle `obsidian`, codemirror, lezer, or node built-ins (`esbuild.config.mjs:19-34`).
 - Incoming links rely on the undocumented `MetadataCache.getBacklinksForFile` internal API (`src/links-collector.ts:1-5, 54`). Treat it as a breaking-change risk.
