@@ -3,13 +3,14 @@ import LynxPlugin from './main';
 import { collectLinks, LinkItem } from './links-collector';
 import { SortOrder } from './settings';
 
+const LYNX_LINK_COLOR_VAR = '--lynx-link-color';
+
 export const VIEW_TYPE = 'lynx-links-view';
 
 export class LynxLinksView extends ItemView {
 	plugin: LynxPlugin;
 	private currentFile: TFile | null = null;
 	private currentSort: SortOrder;
-	private headerTitle!: HTMLElement;
 	private sortSelect!: HTMLSelectElement;
 	private listContainer!: HTMLElement;
 	private backButton!: HTMLElement;
@@ -39,9 +40,6 @@ export class LynxLinksView extends ItemView {
 	async onOpen(): Promise<void> {
 		this.contentEl.empty();
 		this.contentEl.addClass('lynx-links-view');
-
-		const header = this.contentEl.createDiv({ cls: 'lynx-links-header' });
-		this.headerTitle = header.createEl('h4', { text: 'No active note' });
 
 		const toolbar = this.contentEl.createDiv({ cls: 'lynx-links-toolbar' });
 
@@ -100,11 +98,8 @@ export class LynxLinksView extends ItemView {
 		this.listContainer.empty();
 
 		if (!this.currentFile) {
-			this.headerTitle.setText('No active note');
 			return;
 		}
-
-		this.headerTitle.setText(this.currentFile.basename);
 
 		let items = collectLinks(this.currentFile, this.plugin.app, {
 			showUnresolved: this.plugin.settings.showUnresolved,
@@ -131,9 +126,20 @@ export class LynxLinksView extends ItemView {
 				item.resolved ? '' : ' lynx-link--unresolved'
 			}`,
 		});
+		row.style.setProperty(
+			LYNX_LINK_COLOR_VAR,
+			item.type === 'incoming'
+				? this.plugin.settings.incomingColor
+				: this.plugin.settings.outgoingColor,
+		);
 
 		const icon = row.createSpan({ cls: 'lynx-link-icon' });
-		setIcon(icon, item.type === 'incoming' ? 'arrow-left' : 'arrow-right');
+		setIcon(
+			icon,
+			item.type === 'incoming'
+				? this.plugin.settings.incomingIcon
+				: this.plugin.settings.outgoingIcon,
+		);
 
 		row.createSpan({
 			cls: 'lynx-link-label',
@@ -182,7 +188,7 @@ export class LynxLinksView extends ItemView {
 		this.updateHistoryButtons();
 	}
 
-	private goBack(): void {
+	goBack(): void {
 		if (this.historyIndex <= 0) return;
 		this.historyIndex--;
 		const file = this.history[this.historyIndex];
@@ -195,7 +201,7 @@ export class LynxLinksView extends ItemView {
 		this.updateHistoryButtons();
 	}
 
-	private goForward(): void {
+	goForward(): void {
 		if (this.historyIndex >= this.history.length - 1) return;
 		this.historyIndex++;
 		const file = this.history[this.historyIndex];

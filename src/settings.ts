@@ -9,16 +9,49 @@ export type SortOrder =
 	| 'type-asc'
 	| 'type-desc';
 
+export const LYNX_CSS_COLORS = [
+	{ value: 'var(--link-color)', label: 'Link' },
+	{ value: 'var(--text-accent)', label: 'Accent' },
+	{ value: 'var(--text-normal)', label: 'Normal' },
+	{ value: 'var(--text-muted)', label: 'Muted' },
+	{ value: 'var(--text-error)', label: 'Error' },
+	{ value: 'var(--text-success)', label: 'Success' },
+	{ value: 'var(--text-warning)', label: 'Warning' },
+] as const;
+
+export type LynxColor = (typeof LYNX_CSS_COLORS)[number]['value'];
+
+export const LYNX_ICONS = [
+	{ value: 'arrow-left', label: 'Arrow left' },
+	{ value: 'arrow-right', label: 'Arrow right' },
+	{ value: 'log-in', label: 'Log in' },
+	{ value: 'log-out', label: 'Log out' },
+	{ value: 'corner-up-left', label: 'Corner up left' },
+	{ value: 'corner-up-right', label: 'Corner up right' },
+	{ value: 'arrow-big-left', label: 'Big arrow left' },
+	{ value: 'arrow-big-right', label: 'Big arrow right' },
+] as const;
+
+export type LynxIcon = (typeof LYNX_ICONS)[number]['value'];
+
 export interface LynxSettings {
 	defaultSort: SortOrder;
 	showUnresolved: boolean;
 	openOnStartup: boolean;
+	incomingColor: LynxColor;
+	outgoingColor: LynxColor;
+	incomingIcon: LynxIcon;
+	outgoingIcon: LynxIcon;
 }
 
 export const DEFAULT_SETTINGS: LynxSettings = {
 	defaultSort: 'modified-desc',
 	showUnresolved: true,
 	openOnStartup: false,
+	incomingColor: 'var(--link-color)',
+	outgoingColor: 'var(--text-accent)',
+	incomingIcon: 'arrow-left',
+	outgoingIcon: 'arrow-right',
 };
 
 export class LynxSettingTab extends PluginSettingTab {
@@ -71,6 +104,66 @@ export class LynxSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.openOnStartup)
 					.onChange(async (value) => {
 						this.plugin.settings.openOnStartup = value;
+						await this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Incoming link color')
+			.setDesc('Color used for incoming links in the panel.')
+			.addDropdown((dropdown) => {
+				for (const { value, label } of LYNX_CSS_COLORS) {
+					dropdown.addOption(value, label);
+				}
+				dropdown
+					.setValue(this.plugin.settings.incomingColor)
+					.onChange(async (value) => {
+						this.plugin.settings.incomingColor = value as LynxColor;
+						await this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Outgoing link color')
+			.setDesc('Color used for outgoing links in the panel.')
+			.addDropdown((dropdown) => {
+				for (const { value, label } of LYNX_CSS_COLORS) {
+					dropdown.addOption(value, label);
+				}
+				dropdown
+					.setValue(this.plugin.settings.outgoingColor)
+					.onChange(async (value) => {
+						this.plugin.settings.outgoingColor = value as LynxColor;
+						await this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Incoming link icon')
+			.setDesc('Icon used for incoming links in the panel.')
+			.addDropdown((dropdown) => {
+				for (const { value, label } of LYNX_ICONS) {
+					dropdown.addOption(value, label);
+				}
+				dropdown
+					.setValue(this.plugin.settings.incomingIcon)
+					.onChange(async (value) => {
+						this.plugin.settings.incomingIcon = value as LynxIcon;
+						await this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Outgoing link icon')
+			.setDesc('Icon used for outgoing links in the panel.')
+			.addDropdown((dropdown) => {
+				for (const { value, label } of LYNX_ICONS) {
+					dropdown.addOption(value, label);
+				}
+				dropdown
+					.setValue(this.plugin.settings.outgoingIcon)
+					.onChange(async (value) => {
+						this.plugin.settings.outgoingIcon = value as LynxIcon;
 						await this.plugin.saveSettings();
 					});
 			});

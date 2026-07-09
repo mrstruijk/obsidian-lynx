@@ -1,6 +1,7 @@
 import { Plugin, TFile, debounce } from 'obsidian';
 import { DEFAULT_SETTINGS, LynxSettings, LynxSettingTab } from './settings';
 import { LynxLinksView, VIEW_TYPE } from './links-view';
+import { LynxNotePickerModal } from './note-picker-modal';
 
 export default class LynxPlugin extends Plugin {
 	settings!: LynxSettings;
@@ -19,6 +20,33 @@ export default class LynxPlugin extends Plugin {
 			id: 'open-links-view',
 			name: 'Open links view',
 			callback: () => this.openLinksView(),
+		});
+
+		this.addCommand({
+			id: 'toggle-links-view',
+			name: 'Toggle links view',
+			callback: () => this.toggleLinksView(),
+		});
+
+		this.addCommand({
+			id: 'go-back',
+			name: 'Go back',
+			callback: () => this.getLynxView()?.goBack(),
+		});
+
+		this.addCommand({
+			id: 'go-forward',
+			name: 'Go forward',
+			callback: () => this.getLynxView()?.goForward(),
+		});
+
+		this.addCommand({
+			id: 'pick-linked-note',
+			name: 'Pick linked note',
+			callback: () => {
+				const file = this.app.workspace.getActiveFile();
+				new LynxNotePickerModal(this.app, this, file).open();
+			},
 		});
 
 		this.addSettingTab(new LynxSettingTab(this.app, this));
@@ -87,6 +115,25 @@ export default class LynxPlugin extends Plugin {
 			if (leaf.view instanceof LynxLinksView) {
 				leaf.view.update(file);
 			}
+		}
+	}
+
+	private getLynxView(): LynxLinksView | null {
+		const leaf = this.app.workspace.getLeavesOfType(VIEW_TYPE)[0];
+		if (leaf?.view instanceof LynxLinksView) {
+			return leaf.view;
+		}
+		return null;
+	}
+
+	private toggleLinksView(): void {
+		const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE);
+		if (leaves.length > 0) {
+			for (const leaf of leaves) {
+				leaf.detach();
+			}
+		} else {
+			void this.openLinksView();
 		}
 	}
 }

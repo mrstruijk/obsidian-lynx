@@ -65,7 +65,7 @@ export function collectLinks(
 	const backlinks = (app.metadataCache as MetadataCacheInternal).getBacklinksForFile(file);
 	if (backlinks?.data) {
 		const seen = new Set<string>();
-		for (const sourcePath of backlinks.data.keys()) {
+		for (const [sourcePath, references] of backlinks.data.entries()) {
 			const key = sourcePath.toLowerCase();
 			if (seen.has(key)) continue;
 			seen.add(key);
@@ -73,10 +73,14 @@ export function collectLinks(
 			const sourceFile = app.vault.getAbstractFileByPath(sourcePath);
 			if (!(sourceFile instanceof TFile)) continue;
 
+			const displayName =
+				references.find((ref) => ref.displayText)?.displayText ??
+				sourceFile.basename;
+
 			items.push({
 				type: 'incoming',
 				path: sourcePath,
-				displayName: sourceFile.basename,
+				displayName,
 				resolved: true,
 				file: sourceFile,
 				mtime: sourceFile.stat.mtime,
