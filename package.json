@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-lynx",
-	"version": "1.0.0",
+	"version": "0.0.1",
 	"description": "Incoming/outgoing links view for Obsidian",
 	"main": "main.js",
 	"type": "module",
