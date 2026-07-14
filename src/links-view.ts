@@ -149,6 +149,17 @@ export class LynxLinksView extends ItemView {
 			text: item.displayName,
 		});
 
+		const showLine =
+			(item.type === 'incoming' && this.plugin.settings.showLineIncoming) ||
+			(item.type === 'outgoing' && this.plugin.settings.showLineOutgoing) ||
+			(item.type === 'bidirectional' && this.plugin.settings.showLineBidirectional);
+		if (showLine && item.position?.start.line != null) {
+			row.createSpan({
+				cls: 'lynx-link-line',
+				text: ` :${item.position.start.line}`,
+			});
+		}
+
 		row.addEventListener('click', () => {
 			this.pushHistory(item.path);
 			void openLinkItem(

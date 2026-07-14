@@ -83,6 +83,13 @@
 	font-weight: var(--font-medium);
 }
 
+.lynx-link-line {
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	margin-left: var(--size-2-1);
+	flex-shrink: 0;
+}
+
 .lynx-links-empty {
 	color: var(--text-muted);
 	font-size: var(--font-smaller);

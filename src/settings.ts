@@ -43,6 +43,9 @@ export interface LynxSettings {
 	defaultSort: SortOrder;
 	showUnresolved: boolean;
 	openOnStartup: boolean;
+	showLineIncoming: boolean;
+	showLineOutgoing: boolean;
+	showLineBidirectional: boolean;
 	incomingColor: LynxColor;
 	outgoingColor: LynxColor;
 	bidirectionalColor: LynxColor;
@@ -55,6 +58,9 @@ export const DEFAULT_SETTINGS: LynxSettings = {
 	defaultSort: 'modified-desc',
 	showUnresolved: true,
 	openOnStartup: false,
+	showLineIncoming: true,
+	showLineOutgoing: false,
+	showLineBidirectional: true,
 	incomingColor: 'var(--link-color)',
 	outgoingColor: 'var(--text-accent)',
 	bidirectionalColor: 'var(--text-accent)',
@@ -117,6 +123,45 @@ export class LynxSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.openOnStartup = value;
 						await this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Show line numbers for incoming links')
+			.setDesc('Append the source line number to incoming link titles.')
+			.addToggle((toggle) => {
+				toggle
+					.setValue(this.plugin.settings.showLineIncoming)
+					.onChange(async (value) => {
+						this.plugin.settings.showLineIncoming = value;
+						await this.plugin.saveSettings();
+						this.plugin.refreshAllViews();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Show line numbers for outgoing links')
+			.setDesc('Append the source line number to outgoing link titles.')
+			.addToggle((toggle) => {
+				toggle
+					.setValue(this.plugin.settings.showLineOutgoing)
+					.onChange(async (value) => {
+						this.plugin.settings.showLineOutgoing = value;
+						await this.plugin.saveSettings();
+						this.plugin.refreshAllViews();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Show line numbers for bidirectional links')
+			.setDesc('Append the source line number to bidirectional link titles.')
+			.addToggle((toggle) => {
+				toggle
+					.setValue(this.plugin.settings.showLineBidirectional)
+					.onChange(async (value) => {
+						this.plugin.settings.showLineBidirectional = value;
+						await this.plugin.saveSettings();
+						this.plugin.refreshAllViews();
 					});
 			});
 

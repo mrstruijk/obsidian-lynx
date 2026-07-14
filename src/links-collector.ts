@@ -54,31 +54,35 @@ export function collectLinks(
 
 	const cache = app.metadataCache.getFileCache(file);
 	if (cache) {
-		const addOutgoingLinks = (
-			refs: (ReferenceCache | { link: string })[],
-			source: 'body' | 'frontmatter',
-		): void => {
-			for (const link of refs) {
-				const dest = app.metadataCache.getFirstLinkpathDest(link.link, file.path);
-				const resolved = dest instanceof TFile;
-				const path = resolved ? dest.path : link.link;
+			const addOutgoingLinks = (
+				refs: (ReferenceCache | { link: string })[],
+				source: 'body' | 'frontmatter',
+			): void => {
+				for (const link of refs) {
+					const dest = app.metadataCache.getFirstLinkpathDest(link.link, file.path);
+					const resolved = dest instanceof TFile;
+					const path = resolved ? dest.path : link.link;
 
-				if (getPathItem(path)) continue;
+					if (getPathItem(path)) continue;
 
-				if (!resolved && !settings.showUnresolved) continue;
+					if (!resolved && !settings.showUnresolved) continue;
 
-				setPathItem(path, {
-					type: 'outgoing',
-					path,
-					displayName: resolved ? dest.basename : getLinkBasename(link.link),
-					resolved,
-					file: resolved ? dest : undefined,
-					mtime: resolved ? dest.stat.mtime : 0,
-					source,
-					linkSubpath: extractSubpath(link.link),
-				});
-			}
-		};
+					setPathItem(path, {
+						type: 'outgoing',
+						path,
+						displayName: resolved ? dest.basename : getLinkBasename(link.link),
+						resolved,
+						file: resolved ? dest : undefined,
+						mtime: resolved ? dest.stat.mtime : 0,
+						source,
+						linkSubpath: extractSubpath(link.link),
+						position:
+							source === 'body'
+								? (link as ReferenceCache).position
+							: undefined,
+					});
+				}
+			};
 
 		addOutgoingLinks(cache.links ?? [], 'body');
 		addOutgoingLinks(cache.frontmatterLinks ?? [], 'frontmatter');
