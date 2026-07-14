@@ -83,7 +83,8 @@
 	font-weight: var(--font-medium);
 }
 
-.lynx-link-line {
+.lynx-link-line,
+.lynx-link-source {
 	color: var(--text-muted);
 	font-size: var(--font-ui-smaller);
 	margin-left: var(--size-2-1);

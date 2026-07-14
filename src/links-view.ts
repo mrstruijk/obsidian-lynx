@@ -76,7 +76,7 @@ export class LynxLinksView extends ItemView {
 			this.currentSort = this.sortSelect.value as SortOrder;
 			this.plugin.settings.defaultSort = this.currentSort;
 			void this.plugin.saveSettings();
-			this.render();
+			void this.render();
 		});
 
 		this.listContainer = this.contentEl.createDiv({
@@ -94,7 +94,7 @@ export class LynxLinksView extends ItemView {
 			this.pushHistory(file.path);
 		}
 
-		this.render();
+		void this.render();
 	}
 
 	refresh(): void {
@@ -102,10 +102,10 @@ export class LynxLinksView extends ItemView {
 		if (this.sortSelect) {
 			this.sortSelect.value = this.currentSort;
 		}
-		this.render();
+		void this.render();
 	}
 
-	private render(): void {
+	private async render(): Promise<void> {
 		if (!this.listContainer) return;
 		this.listContainer.empty();
 
@@ -113,7 +113,7 @@ export class LynxLinksView extends ItemView {
 			return;
 		}
 
-		let items = collectLinks(this.currentFile, this.plugin.app, {
+		let items = await collectLinks(this.currentFile, this.plugin.app, {
 			showUnresolved: this.plugin.settings.showUnresolved,
 		});
 
@@ -149,6 +149,13 @@ export class LynxLinksView extends ItemView {
 			text: item.displayName,
 		});
 
+		if (item.source === 'frontmatter') {
+			row.createSpan({
+				cls: 'lynx-link-source',
+				text: ' :fm',
+			});
+		}
+
 		const showLine =
 			(item.type === 'incoming' && this.plugin.settings.showLineIncoming) ||
 			(item.type === 'outgoing' && this.plugin.settings.showLineOutgoing) ||
@@ -156,7 +163,7 @@ export class LynxLinksView extends ItemView {
 		if (showLine && item.position?.start.line != null) {
 			row.createSpan({
 				cls: 'lynx-link-line',
-				text: ` :${item.position.start.line}`,
+				text: ` :${item.position.start.line + 1}`,
 			});
 		}
 

@@ -8,17 +8,25 @@ const LYNX_LINK_COLOR_VAR = '--lynx-link-color';
 
 export class LynxNotePickerModal extends SuggestModal<LinkItem> {
 	plugin: LynxPlugin;
-	items: LinkItem[];
+	items: LinkItem[] = [];
 
 	constructor(app: App, plugin: LynxPlugin, currentFile: TFile | null) {
 		super(app);
 		this.plugin = plugin;
 		this.setPlaceholder('Pick a linked note');
-		this.items = currentFile
-			? collectLinks(currentFile, app, {
-					showUnresolved: plugin.settings.showUnresolved,
-			  })
-			: [];
+		this.loadItems(currentFile).catch(() => {
+			this.items = [];
+		});
+	}
+
+	private async loadItems(currentFile: TFile | null): Promise<void> {
+		if (!currentFile) {
+			this.items = [];
+			return;
+		}
+		this.items = await collectLinks(currentFile, this.plugin.app, {
+			showUnresolved: this.plugin.settings.showUnresolved,
+		});
 	}
 
 	getSuggestions(query: string): LinkItem[] {

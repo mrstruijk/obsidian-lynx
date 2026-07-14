@@ -1,7 +1,64 @@
-import { App, MetadataCache, ReferenceCache, TFile } from 'obsidian';
+import { App, MetadataCache, ReferenceCache, TFile, TAbstractFile } from 'obsidian';
 
 interface MetadataCacheInternal extends MetadataCache {
 	getBacklinksForFile(file: TFile): { data: Map<string, ReferenceCache[]> } | null;
+}
+
+async function readFileContent(
+	app: App,
+	file: TFile | TAbstractFile,
+): Promise<string> {
+	if (!(file instanceof TFile)) return '';
+	return app.vault.read(file);
+}
+
+function normalizeLineEndings(content: string): string {
+	return content.replace(/\r\n/g, '\n');
+}
+
+function findFrontmatterEndLine(content: string): number | undefined {
+	const normalized = normalizeLineEndings(content);
+	const lines = normalized.split('\n');
+	if (lines[0] !== '---') return undefined;
+	for (let i = 1; i < lines.length; i++) {
+		if (lines[i] === '---') return i;
+	}
+	return undefined;
+}
+
+function computeFrontmatterEndOffset(content: string): number | undefined {
+	const endLine = findFrontmatterEndLine(content);
+	if (endLine == null) return undefined;
+	const normalized = normalizeLineEndings(content);
+	const lines = normalized.split('\n');
+	let fmEndOffset = 0;
+	for (let i = 0; i <= endLine; i++) {
+		fmEndOffset += lines[i]?.length ?? 0;
+		if (i < endLine) fmEndOffset += 1;
+	}
+	return fmEndOffset;
+}
+
+function isOffsetInFrontmatter(content: string, offset: number): boolean {
+	const fmEndOffset = computeFrontmatterEndOffset(content);
+	if (fmEndOffset == null) return false;
+	return offset < fmEndOffset;
+}
+
+function isRefInFrontmatter(content: string, ref: ReferenceCache): boolean {
+	const normalized = normalizeLineEndings(content);
+	const fmEndLine = findFrontmatterEndLine(normalized);
+	if (fmEndLine == null) return false;
+
+	if (ref.position?.start?.offset != null) {
+		return isOffsetInFrontmatter(normalized, ref.position.start.offset);
+	}
+
+	if (ref.position?.start?.line != null) {
+		return ref.position.start.line < fmEndLine;
+	}
+
+	return false;
 }
 
 function getLinkBasename(linkText: string): string {
@@ -37,11 +94,11 @@ export interface LynxCollectorSettings {
 	showUnresolved: boolean;
 }
 
-export function collectLinks(
+export async function collectLinks(
 	file: TFile,
 	app: App,
 	settings: LynxCollectorSettings,
-): LinkItem[] {
+): Promise<LinkItem[]> {
 	const itemsByPath = new Map<string, LinkItem>();
 
 	function setPathItem(path: string, item: LinkItem): void {
@@ -54,35 +111,35 @@ export function collectLinks(
 
 	const cache = app.metadataCache.getFileCache(file);
 	if (cache) {
-			const addOutgoingLinks = (
-				refs: (ReferenceCache | { link: string })[],
-				source: 'body' | 'frontmatter',
-			): void => {
-				for (const link of refs) {
-					const dest = app.metadataCache.getFirstLinkpathDest(link.link, file.path);
-					const resolved = dest instanceof TFile;
-					const path = resolved ? dest.path : link.link;
+		const addOutgoingLinks = (
+			refs: (ReferenceCache | { link: string })[],
+			source: 'body' | 'frontmatter',
+		): void => {
+			for (const link of refs) {
+				const dest = app.metadataCache.getFirstLinkpathDest(link.link, file.path);
+				const resolved = dest instanceof TFile;
+				const path = resolved ? dest.path : link.link;
 
-					if (getPathItem(path)) continue;
+				if (getPathItem(path)) continue;
 
-					if (!resolved && !settings.showUnresolved) continue;
+				if (!resolved && !settings.showUnresolved) continue;
 
-					setPathItem(path, {
-						type: 'outgoing',
-						path,
-						displayName: resolved ? dest.basename : getLinkBasename(link.link),
-						resolved,
-						file: resolved ? dest : undefined,
-						mtime: resolved ? dest.stat.mtime : 0,
-						source,
-						linkSubpath: extractSubpath(link.link),
-						position:
-							source === 'body'
-								? (link as ReferenceCache).position
+				setPathItem(path, {
+					type: 'outgoing',
+					path,
+					displayName: resolved ? dest.basename : getLinkBasename(link.link),
+					resolved,
+					file: resolved ? dest : undefined,
+					mtime: resolved ? dest.stat.mtime : 0,
+					source,
+					linkSubpath: extractSubpath(link.link),
+					position:
+						source === 'body'
+							? (link as ReferenceCache).position
 							: undefined,
-					});
-				}
-			};
+				});
+			}
+		};
 
 		addOutgoingLinks(cache.links ?? [], 'body');
 		addOutgoingLinks(cache.frontmatterLinks ?? [], 'frontmatter');
@@ -90,6 +147,8 @@ export function collectLinks(
 
 	const backlinks = (app.metadataCache as MetadataCacheInternal).getBacklinksForFile(file);
 	if (backlinks?.data) {
+		const sourceContents = new Map<string, string>();
+
 		for (const [sourcePath, refs] of backlinks.data.entries()) {
 			const sourceFile = app.vault.getAbstractFileByPath(sourcePath);
 			if (!(sourceFile instanceof TFile)) continue;
@@ -105,29 +164,43 @@ export function collectLinks(
 				return colA - colB;
 			});
 
-			const chosenRef =
-				sortedRefs.find((ref) => ref.position?.start != null) ?? sortedRefs[0]!;
-			const subpath = extractSubpath(chosenRef.link);
-			const position = chosenRef.position;
+		const chosenRef =
+			sortedRefs.find((ref) => ref.position?.start != null) ?? sortedRefs[0]!;
+		const subpath = extractSubpath(chosenRef.link);
+		const position = chosenRef.position;
 
-			const existing = getPathItem(sourcePath);
-			if (existing) {
-				existing.type = 'bidirectional';
-				existing.position = position;
-				existing.linkSubpath = subpath;
-			} else {
-				setPathItem(sourcePath, {
-					type: 'incoming',
-					path: sourcePath,
-					displayName: sourceFile.basename,
-					resolved: true,
-					file: sourceFile,
-					mtime: sourceFile.stat.mtime,
-					source: 'body',
-					linkSubpath: subpath,
-					position,
-				});
+		let content = sourceContents.get(sourcePath);
+		if (content === undefined) {
+			content = await readFileContent(app, sourceFile);
+			sourceContents.set(sourcePath, content);
+		}
+		const source = refs.some((ref) => isRefInFrontmatter(content, ref))
+			? 'frontmatter'
+			: 'body';
+
+		const existing = getPathItem(sourcePath);
+		if (existing) {
+			existing.type = 'bidirectional';
+			existing.position = position;
+			existing.linkSubpath = subpath;
+			// Preserve an already-known frontmatter source rather than overwrite it
+			// with a body backlink detection.
+			if (source === 'frontmatter' || existing.source !== 'frontmatter') {
+				existing.source = source;
 			}
+		} else {
+			setPathItem(sourcePath, {
+				type: 'incoming',
+				path: sourcePath,
+				displayName: sourceFile.basename,
+				resolved: true,
+				file: sourceFile,
+				mtime: sourceFile.stat.mtime,
+				source,
+				linkSubpath: subpath,
+				position,
+			});
+		}
 		}
 	}
 
