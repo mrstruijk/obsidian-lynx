@@ -118,6 +118,14 @@ export default class LynxPlugin extends Plugin {
 		}
 	}
 
+	refreshAllViews(): void {
+		for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE)) {
+			if (leaf.view instanceof LynxLinksView) {
+				leaf.view.refresh();
+			}
+		}
+	}
+
 	private getLynxView(): LynxLinksView | null {
 		const leaf = this.app.workspace.getLeavesOfType(VIEW_TYPE)[0];
 		if (leaf?.view instanceof LynxLinksView) {

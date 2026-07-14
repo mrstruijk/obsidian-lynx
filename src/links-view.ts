@@ -94,6 +94,14 @@ export class LynxLinksView extends ItemView {
 		this.render();
 	}
 
+	refresh(): void {
+		this.currentSort = this.plugin.settings.defaultSort;
+		if (this.sortSelect) {
+			this.sortSelect.value = this.currentSort;
+		}
+		this.render();
+	}
+
 	private render(): void {
 		if (!this.listContainer) return;
 		this.listContainer.empty();

@@ -89,6 +89,7 @@ export class LynxSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.defaultSort = value as SortOrder;
 						await this.plugin.saveSettings();
+						this.plugin.refreshAllViews();
 					});
 			});
 
@@ -97,11 +98,12 @@ export class LynxSettingTab extends PluginSettingTab {
 			.setDesc('Include links that do not yet point to an existing note.')
 			.addToggle((toggle) => {
 				toggle
-					.setValue(this.plugin.settings.showUnresolved)
-					.onChange(async (value) => {
-						this.plugin.settings.showUnresolved = value;
-						await this.plugin.saveSettings();
-					});
+				.setValue(this.plugin.settings.showUnresolved)
+				.onChange(async (value) => {
+					this.plugin.settings.showUnresolved = value;
+					await this.plugin.saveSettings();
+					this.plugin.refreshAllViews();
+				});
 			});
 
 		new Setting(containerEl)
@@ -144,11 +146,12 @@ export class LynxSettingTab extends PluginSettingTab {
 					dropdown.addOption(value, label);
 				}
 				dropdown
-					.setValue(this.plugin.settings.incomingIcon)
-					.onChange(async (value) => {
-						this.plugin.settings.incomingIcon = value as LynxIcon;
-						await this.plugin.saveSettings();
-					});
+				.setValue(this.plugin.settings.incomingIcon)
+				.onChange(async (value) => {
+					this.plugin.settings.incomingIcon = value as LynxIcon;
+					await this.plugin.saveSettings();
+					this.plugin.refreshAllViews();
+				});
 			});
 
 		new Setting(containerEl)
@@ -159,11 +162,12 @@ export class LynxSettingTab extends PluginSettingTab {
 					dropdown.addOption(value, label);
 				}
 				dropdown
-					.setValue(this.plugin.settings.outgoingIcon)
-					.onChange(async (value) => {
-						this.plugin.settings.outgoingIcon = value as LynxIcon;
-						await this.plugin.saveSettings();
-					});
+				.setValue(this.plugin.settings.outgoingIcon)
+				.onChange(async (value) => {
+					this.plugin.settings.outgoingIcon = value as LynxIcon;
+					await this.plugin.saveSettings();
+					this.plugin.refreshAllViews();
+				});
 			});
 
 		this.addColorSetting(
@@ -184,11 +188,12 @@ export class LynxSettingTab extends PluginSettingTab {
 					dropdown.addOption(value, label);
 				}
 				dropdown
-					.setValue(this.plugin.settings.bidirectionalIcon)
-					.onChange(async (value) => {
-						this.plugin.settings.bidirectionalIcon = value as LynxIcon;
-						await this.plugin.saveSettings();
-					});
+				.setValue(this.plugin.settings.bidirectionalIcon)
+				.onChange(async (value) => {
+					this.plugin.settings.bidirectionalIcon = value as LynxIcon;
+					await this.plugin.saveSettings();
+					this.plugin.refreshAllViews();
+				});
 			});
 	}
 
@@ -226,6 +231,7 @@ export class LynxSettingTab extends PluginSettingTab {
 						updateSetting(color);
 						updatePreview(color);
 						await this.plugin.saveSettings();
+						this.plugin.refreshAllViews();
 					});
 			});
 	}
