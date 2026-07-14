@@ -1,8 +1,8 @@
 import { ItemView, WorkspaceLeaf, TFile, setIcon, Menu } from 'obsidian';
 import LynxPlugin from './main';
-import { collectLinks, LinkItem } from './links-collector';
+import { collectLinks, LinkItem, LinkType } from './links-collector';
 import { openLinkItem } from './open-link';
-import { SortOrder } from './settings';
+import { LynxSettings, SortOrder } from './settings';
 
 const LYNX_LINK_COLOR_VAR = '--lynx-link-color';
 
@@ -62,7 +62,7 @@ export class LynxLinksView extends ItemView {
 			'modified-asc': 'Modified (oldest)',
 			'name-asc': 'Name (a → z)',
 			'name-desc': 'Name (z → a)',
-			'type-asc': 'Type (incoming first)',
+			'type-asc': 'Type (bidirectional first)',
 			'type-desc': 'Type (outgoing first)',
 		};
 
@@ -127,20 +127,11 @@ export class LynxLinksView extends ItemView {
 				item.resolved ? '' : ' lynx-link--unresolved'
 			}`,
 		});
-		row.style.setProperty(
-			LYNX_LINK_COLOR_VAR,
-			item.type === 'incoming'
-				? this.plugin.settings.incomingColor
-				: this.plugin.settings.outgoingColor,
-		);
+		const typeSettings = getTypeSettings(item.type, this.plugin.settings);
+		row.style.setProperty(LYNX_LINK_COLOR_VAR, typeSettings.color);
 
 		const icon = row.createSpan({ cls: 'lynx-link-icon' });
-		setIcon(
-			icon,
-			item.type === 'incoming'
-				? this.plugin.settings.incomingIcon
-				: this.plugin.settings.outgoingIcon,
-		);
+		setIcon(icon, typeSettings.icon);
 
 		row.createSpan({
 			cls: 'lynx-link-label',
@@ -243,9 +234,27 @@ function sortItems(items: LinkItem[], order: SortOrder): LinkItem[] {
 			if (cmp !== 0) return cmp * dir;
 		}
 		if (field === 'type') {
-			const cmp = a.type.localeCompare(b.type);
+			const rank = { bidirectional: 0, incoming: 1, outgoing: 2 };
+			const cmp = rank[a.type] - rank[b.type];
 			if (cmp !== 0) return cmp * dir;
 		}
 		return a.displayName.localeCompare(b.displayName);
 	});
+}
+
+function getTypeSettings(
+	type: LinkType,
+	settings: LynxSettings,
+): { color: string; icon: string } {
+	switch (type) {
+		case 'incoming':
+			return { color: settings.incomingColor, icon: settings.incomingIcon };
+		case 'outgoing':
+			return { color: settings.outgoingColor, icon: settings.outgoingIcon };
+		case 'bidirectional':
+			return {
+				color: settings.bidirectionalColor,
+				icon: settings.bidirectionalIcon,
+			};
+	}
 }

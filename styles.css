@@ -79,6 +79,10 @@
 	opacity: 0.6;
 }
 
+.lynx-link--bidirectional {
+	font-weight: var(--font-medium);
+}
+
 .lynx-links-empty {
 	color: var(--text-muted);
 	font-size: var(--font-smaller);

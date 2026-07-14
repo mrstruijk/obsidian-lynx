@@ -24,6 +24,7 @@ export type LynxColor = (typeof LYNX_CSS_COLORS)[number]['value'];
 export const LYNX_ICONS = [
 	{ value: 'arrow-left', label: 'Arrow left' },
 	{ value: 'arrow-right', label: 'Arrow right' },
+	{ value: 'arrow-left-right', label: 'Arrow left right' },
 	{ value: 'log-in', label: 'Log in' },
 	{ value: 'log-out', label: 'Log out' },
 	{ value: 'corner-up-left', label: 'Corner up left' },
@@ -40,8 +41,10 @@ export interface LynxSettings {
 	openOnStartup: boolean;
 	incomingColor: LynxColor;
 	outgoingColor: LynxColor;
+	bidirectionalColor: LynxColor;
 	incomingIcon: LynxIcon;
 	outgoingIcon: LynxIcon;
+	bidirectionalIcon: LynxIcon;
 }
 
 export const DEFAULT_SETTINGS: LynxSettings = {
@@ -50,8 +53,10 @@ export const DEFAULT_SETTINGS: LynxSettings = {
 	openOnStartup: false,
 	incomingColor: 'var(--link-color)',
 	outgoingColor: 'var(--text-accent)',
+	bidirectionalColor: 'var(--text-accent)',
 	incomingIcon: 'arrow-left',
 	outgoingIcon: 'arrow-right',
+	bidirectionalIcon: 'arrow-left-right',
 };
 
 export class LynxSettingTab extends PluginSettingTab {
@@ -75,7 +80,7 @@ export class LynxSettingTab extends PluginSettingTab {
 					.addOption('modified-asc', 'Modified date (oldest first)')
 					.addOption('name-asc', 'Name (a → z)')
 					.addOption('name-desc', 'Name (z → a)')
-					.addOption('type-asc', 'Type (incoming first)')
+					.addOption('type-asc', 'Type (bidirectional first)')
 					.addOption('type-desc', 'Type (outgoing first)')
 					.setValue(this.plugin.settings.defaultSort)
 					.onChange(async (value) => {
@@ -164,6 +169,36 @@ export class LynxSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.outgoingIcon)
 					.onChange(async (value) => {
 						this.plugin.settings.outgoingIcon = value as LynxIcon;
+						await this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Bidirectional link color')
+			.setDesc('Color used for links that are both incoming and outgoing.')
+			.addDropdown((dropdown) => {
+				for (const { value, label } of LYNX_CSS_COLORS) {
+					dropdown.addOption(value, label);
+				}
+				dropdown
+					.setValue(this.plugin.settings.bidirectionalColor)
+					.onChange(async (value) => {
+						this.plugin.settings.bidirectionalColor = value as LynxColor;
+						await this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Bidirectional link icon')
+			.setDesc('Icon used for links that are both incoming and outgoing.')
+			.addDropdown((dropdown) => {
+				for (const { value, label } of LYNX_ICONS) {
+					dropdown.addOption(value, label);
+				}
+				dropdown
+					.setValue(this.plugin.settings.bidirectionalIcon)
+					.onChange(async (value) => {
+						this.plugin.settings.bidirectionalIcon = value as LynxIcon;
 						await this.plugin.saveSettings();
 					});
 			});

@@ -22,6 +22,8 @@ export async function openLinkItem(
 		}
 	}
 
+	// position is the location in the target note where the current note is referenced;
+	// it is set for incoming and bidirectional items by collectLinks.
 	if (item.position) {
 		view.editor.setCursor({
 			line: item.position.start.line,

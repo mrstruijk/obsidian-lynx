@@ -19,8 +19,8 @@ TypeScript only checks `src/**/*.ts` (`tsconfig.json:18`). Root `.mjs`/`.mts` fi
 ## Architecture
 - `src/main.ts` — `LynxPlugin`. Registers the `lynx-links-view` view, five commands (**Open links view**, **Toggle links view**, **Go back**, **Go forward**, **Pick linked note**), the settings tab, and event listeners for `file-open` (immediate refresh), `metadata-cache:changed` (live link preview while typing, debounced 250ms), and `vault:modify` (refresh on save, debounced). All refresh events are filtered to the active file only.
 - `src/links-view.ts` — `ItemView` subclass that renders the right-sidebar links list, sort dropdown, and back/forward history buttons. Maintains an inline history stack (`history: TFile[]`, `historyIndex`) that tracks files visited via the Lynx view or external navigation. Back/forward buttons navigate the stack and open files in the main editor via `openLinkText`.
-- `src/links-collector.ts` — builds the combined incoming/outgoing `LinkItem[]` list from Obsidian's metadata cache. Outgoing links include both body links (`cache.links`) and frontmatter links (`cache.frontmatterLinks`); each `LinkItem` carries `source: 'body' | 'frontmatter'` so future UI can distinguish them. Dedup is by lowercase path across both sources.
-- `src/settings.ts` — settings interface, defaults, and the imperative settings tab UI via `PluginSettingTab.display()` using `obsidian.Setting`. Currently six settings: default sort, show unresolved, open on startup, incoming/outgoing color, incoming/outgoing icon.
+- `src/links-collector.ts` — builds the combined incoming/outgoing/bidirectional `LinkItem[]` list from Obsidian's metadata cache. Mutual notes collapse into `type: 'bidirectional'`. Outgoing links include both body links (`cache.links`) and frontmatter links (`cache.frontmatterLinks`); each `LinkItem` carries `source: 'body' | 'frontmatter'` so future UI can distinguish them. Dedup is by lowercase path across all sources; incoming references collapse to the earliest line.
+- `src/settings.ts` — settings interface, defaults, and the imperative settings tab UI via `PluginSettingTab.display()` using `obsidian.Setting`. Currently eight settings: default sort, show unresolved, open on startup, incoming/outgoing/bidirectional color, incoming/outgoing/bidirectional icon.
 - `src/note-picker-modal.ts` — `SuggestModal` quick-open for linked notes from the active file.
 
 ## Obsidian constraints
@@ -48,7 +48,7 @@ TypeScript only checks `src/**/*.ts` (`tsconfig.json:18`). Root `.mjs`/`.mts` fi
 - Run **"Open links view"** from the command palette and switch between notes to verify the list updates.
 - Click a link in the Lynx list → the main editor opens that note. Click the back button (◀) → returns to the previous note. Click forward (▶) → goes forward again.
 - Run **"Pick linked note"** from the command palette and confirm the modal opens, filters, and opens the selected note.
-- Open **Settings → Community plugins → Lynx** and confirm the six settings render and values persist.
+- Open **Settings → Community plugins → Lynx** and confirm the eight settings render and values persist.
 - Use the settings search box to verify each Lynx setting appears and is searchable.
 
 ## LSP
