@@ -12,8 +12,11 @@ export type SortOrder =
 export const LYNX_CSS_COLORS = [
 	{ value: 'var(--link-color)', label: 'Link' },
 	{ value: 'var(--text-accent)', label: 'Accent' },
+	{ value: 'var(--text-accent-hover)', label: 'Accent hover' },
 	{ value: 'var(--text-normal)', label: 'Normal' },
 	{ value: 'var(--text-muted)', label: 'Muted' },
+	{ value: 'var(--text-faint)', label: 'Faint' },
+	{ value: 'var(--tag-color)', label: 'Tag' },
 	{ value: 'var(--text-error)', label: 'Error' },
 	{ value: 'var(--text-success)', label: 'Success' },
 	{ value: 'var(--text-warning)', label: 'Warning' },
