@@ -6,6 +6,7 @@ export type SortOrder =
 	| 'modified-asc'
 	| 'name-asc'
 	| 'name-desc'
+	| 'type-bi'
 	| 'type-asc'
 	| 'type-desc';
 
@@ -83,7 +84,8 @@ export class LynxSettingTab extends PluginSettingTab {
 					.addOption('modified-asc', 'Modified date (oldest first)')
 					.addOption('name-asc', 'Name (a → z)')
 					.addOption('name-desc', 'Name (z → a)')
-					.addOption('type-asc', 'Type (bidirectional first)')
+					.addOption('type-bi', 'Type (bidirectional first)')
+					.addOption('type-asc', 'Type (incoming first)')
 					.addOption('type-desc', 'Type (outgoing first)')
 					.setValue(this.plugin.settings.defaultSort)
 					.onChange(async (value) => {
@@ -98,12 +100,12 @@ export class LynxSettingTab extends PluginSettingTab {
 			.setDesc('Include links that do not yet point to an existing note.')
 			.addToggle((toggle) => {
 				toggle
-				.setValue(this.plugin.settings.showUnresolved)
-				.onChange(async (value) => {
-					this.plugin.settings.showUnresolved = value;
-					await this.plugin.saveSettings();
-					this.plugin.refreshAllViews();
-				});
+					.setValue(this.plugin.settings.showUnresolved)
+					.onChange(async (value) => {
+						this.plugin.settings.showUnresolved = value;
+						await this.plugin.saveSettings();
+						this.plugin.refreshAllViews();
+					});
 			});
 
 		new Setting(containerEl)
@@ -146,12 +148,12 @@ export class LynxSettingTab extends PluginSettingTab {
 					dropdown.addOption(value, label);
 				}
 				dropdown
-				.setValue(this.plugin.settings.incomingIcon)
-				.onChange(async (value) => {
-					this.plugin.settings.incomingIcon = value as LynxIcon;
-					await this.plugin.saveSettings();
-					this.plugin.refreshAllViews();
-				});
+					.setValue(this.plugin.settings.incomingIcon)
+					.onChange(async (value) => {
+						this.plugin.settings.incomingIcon = value as LynxIcon;
+						await this.plugin.saveSettings();
+						this.plugin.refreshAllViews();
+					});
 			});
 
 		new Setting(containerEl)
@@ -162,12 +164,12 @@ export class LynxSettingTab extends PluginSettingTab {
 					dropdown.addOption(value, label);
 				}
 				dropdown
-				.setValue(this.plugin.settings.outgoingIcon)
-				.onChange(async (value) => {
-					this.plugin.settings.outgoingIcon = value as LynxIcon;
-					await this.plugin.saveSettings();
-					this.plugin.refreshAllViews();
-				});
+					.setValue(this.plugin.settings.outgoingIcon)
+					.onChange(async (value) => {
+						this.plugin.settings.outgoingIcon = value as LynxIcon;
+						await this.plugin.saveSettings();
+						this.plugin.refreshAllViews();
+					});
 			});
 
 		this.addColorSetting(
@@ -188,12 +190,13 @@ export class LynxSettingTab extends PluginSettingTab {
 					dropdown.addOption(value, label);
 				}
 				dropdown
-				.setValue(this.plugin.settings.bidirectionalIcon)
-				.onChange(async (value) => {
-					this.plugin.settings.bidirectionalIcon = value as LynxIcon;
-					await this.plugin.saveSettings();
-					this.plugin.refreshAllViews();
-				});
+					.setValue(this.plugin.settings.bidirectionalIcon)
+					.onChange(async (value) => {
+						this.plugin.settings.bidirectionalIcon =
+							value as LynxIcon;
+						await this.plugin.saveSettings();
+						this.plugin.refreshAllViews();
+					});
 			});
 	}
 
@@ -214,9 +217,10 @@ export class LynxSettingTab extends PluginSettingTab {
 					dropdown.addOption(value, label);
 				}
 
-				previewEl = dropdown.selectEl.parentElement?.createDiv({
-					cls: 'lynx-color-preview',
-				}) ?? null;
+				previewEl =
+					dropdown.selectEl.parentElement?.createDiv({
+						cls: 'lynx-color-preview',
+					}) ?? null;
 
 				const updatePreview = (value: LynxColor): void => {
 					previewEl?.style.setProperty('background-color', value);
@@ -224,15 +228,13 @@ export class LynxSettingTab extends PluginSettingTab {
 
 				updatePreview(initialValue);
 
-				dropdown
-					.setValue(initialValue)
-					.onChange(async (value) => {
-						const color = value as LynxColor;
-						updateSetting(color);
-						updatePreview(color);
-						await this.plugin.saveSettings();
-						this.plugin.refreshAllViews();
-					});
+				dropdown.setValue(initialValue).onChange(async (value) => {
+					const color = value as LynxColor;
+					updateSetting(color);
+					updatePreview(color);
+					await this.plugin.saveSettings();
+					this.plugin.refreshAllViews();
+				});
 			});
 	}
 }

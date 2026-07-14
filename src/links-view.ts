@@ -62,7 +62,8 @@ export class LynxLinksView extends ItemView {
 			'modified-asc': 'Modified (oldest)',
 			'name-asc': 'Name (a → z)',
 			'name-desc': 'Name (z → a)',
-			'type-asc': 'Type (bidirectional first)',
+			'type-bi': 'Type (bidirectional first)',
+			'type-asc': 'Type (incoming first)',
 			'type-desc': 'Type (outgoing first)',
 		};
 
@@ -78,7 +79,9 @@ export class LynxLinksView extends ItemView {
 			this.render();
 		});
 
-		this.listContainer = this.contentEl.createDiv({ cls: 'lynx-links-list' });
+		this.listContainer = this.contentEl.createDiv({
+			cls: 'lynx-links-list',
+		});
 
 		this.update(this.plugin.app.workspace.getActiveFile());
 	}
@@ -178,7 +181,10 @@ export class LynxLinksView extends ItemView {
 		if (!(file instanceof TFile)) return;
 
 		// Don't push duplicate consecutive entries
-		if (this.historyIndex >= 0 && this.history[this.historyIndex]?.path === file.path) {
+		if (
+			this.historyIndex >= 0 &&
+			this.history[this.historyIndex]?.path === file.path
+		) {
 			return;
 		}
 
@@ -196,9 +202,11 @@ export class LynxLinksView extends ItemView {
 		if (!file) return;
 
 		this.navigatingHistory = true;
-		void this.plugin.app.workspace.openLinkText(file.path, '').finally(() => {
-			this.navigatingHistory = false;
-		});
+		void this.plugin.app.workspace
+			.openLinkText(file.path, '')
+			.finally(() => {
+				this.navigatingHistory = false;
+			});
 		this.updateHistoryButtons();
 	}
 
@@ -209,9 +217,11 @@ export class LynxLinksView extends ItemView {
 		if (!file) return;
 
 		this.navigatingHistory = true;
-		void this.plugin.app.workspace.openLinkText(file.path, '').finally(() => {
-			this.navigatingHistory = false;
-		});
+		void this.plugin.app.workspace
+			.openLinkText(file.path, '')
+			.finally(() => {
+				this.navigatingHistory = false;
+			});
 		this.updateHistoryButtons();
 	}
 
@@ -233,7 +243,10 @@ export class LynxLinksView extends ItemView {
 type SortField = 'modified' | 'name' | 'type';
 
 function sortItems(items: LinkItem[], order: SortOrder): LinkItem[] {
-	const [field, direction] = order.split('-') as [SortField, 'asc' | 'desc'];
+	const [field, direction] = order.split('-') as [
+		SortField,
+		'bi' | 'asc' | 'desc',
+	];
 	const dir = direction === 'asc' ? 1 : -1;
 
 	return [...items].sort((a, b) => {
@@ -242,9 +255,14 @@ function sortItems(items: LinkItem[], order: SortOrder): LinkItem[] {
 			if (cmp !== 0) return cmp * dir;
 		}
 		if (field === 'type') {
-			const rank = { bidirectional: 0, incoming: 1, outgoing: 2 };
+			const rankByDirection = {
+				bi: { bidirectional: 0, incoming: 1, outgoing: 2 },
+				asc: { incoming: 0, bidirectional: 1, outgoing: 2 },
+				desc: { outgoing: 0, bidirectional: 1, incoming: 2 },
+			};
+			const rank = rankByDirection[direction];
 			const cmp = rank[a.type] - rank[b.type];
-			if (cmp !== 0) return cmp * dir;
+			if (cmp !== 0) return cmp;
 		}
 		return a.displayName.localeCompare(b.displayName);
 	});
@@ -256,9 +274,15 @@ function getTypeSettings(
 ): { color: string; icon: string } {
 	switch (type) {
 		case 'incoming':
-			return { color: settings.incomingColor, icon: settings.incomingIcon };
+			return {
+				color: settings.incomingColor,
+				icon: settings.incomingIcon,
+			};
 		case 'outgoing':
-			return { color: settings.outgoingColor, icon: settings.outgoingIcon };
+			return {
+				color: settings.outgoingColor,
+				icon: settings.outgoingIcon,
+			};
 		case 'bidirectional':
 			return {
 				color: settings.bidirectionalColor,
