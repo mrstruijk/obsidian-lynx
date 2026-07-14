@@ -113,35 +113,25 @@ export class LynxSettingTab extends PluginSettingTab {
 					});
 			});
 
-		new Setting(containerEl)
-			.setName('Incoming link color')
-			.setDesc('Color used for incoming links in the panel.')
-			.addDropdown((dropdown) => {
-				for (const { value, label } of LYNX_CSS_COLORS) {
-					dropdown.addOption(value, label);
-				}
-				dropdown
-					.setValue(this.plugin.settings.incomingColor)
-					.onChange(async (value) => {
-						this.plugin.settings.incomingColor = value as LynxColor;
-						await this.plugin.saveSettings();
-					});
-			});
+		this.addColorSetting(
+			containerEl,
+			'Incoming link color',
+			'Color used for incoming links in the panel.',
+			this.plugin.settings.incomingColor,
+			(value) => {
+				this.plugin.settings.incomingColor = value;
+			},
+		);
 
-		new Setting(containerEl)
-			.setName('Outgoing link color')
-			.setDesc('Color used for outgoing links in the panel.')
-			.addDropdown((dropdown) => {
-				for (const { value, label } of LYNX_CSS_COLORS) {
-					dropdown.addOption(value, label);
-				}
-				dropdown
-					.setValue(this.plugin.settings.outgoingColor)
-					.onChange(async (value) => {
-						this.plugin.settings.outgoingColor = value as LynxColor;
-						await this.plugin.saveSettings();
-					});
-			});
+		this.addColorSetting(
+			containerEl,
+			'Outgoing link color',
+			'Color used for outgoing links in the panel.',
+			this.plugin.settings.outgoingColor,
+			(value) => {
+				this.plugin.settings.outgoingColor = value;
+			},
+		);
 
 		new Setting(containerEl)
 			.setName('Incoming link icon')
@@ -173,20 +163,15 @@ export class LynxSettingTab extends PluginSettingTab {
 					});
 			});
 
-		new Setting(containerEl)
-			.setName('Bidirectional link color')
-			.setDesc('Color used for links that are both incoming and outgoing.')
-			.addDropdown((dropdown) => {
-				for (const { value, label } of LYNX_CSS_COLORS) {
-					dropdown.addOption(value, label);
-				}
-				dropdown
-					.setValue(this.plugin.settings.bidirectionalColor)
-					.onChange(async (value) => {
-						this.plugin.settings.bidirectionalColor = value as LynxColor;
-						await this.plugin.saveSettings();
-					});
-			});
+		this.addColorSetting(
+			containerEl,
+			'Bidirectional link color',
+			'Color used for links that are both incoming and outgoing.',
+			this.plugin.settings.bidirectionalColor,
+			(value) => {
+				this.plugin.settings.bidirectionalColor = value;
+			},
+		);
 
 		new Setting(containerEl)
 			.setName('Bidirectional link icon')
@@ -199,6 +184,44 @@ export class LynxSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.bidirectionalIcon)
 					.onChange(async (value) => {
 						this.plugin.settings.bidirectionalIcon = value as LynxIcon;
+						await this.plugin.saveSettings();
+					});
+			});
+	}
+
+	addColorSetting(
+		containerEl: HTMLElement,
+		name: string,
+		desc: string,
+		initialValue: LynxColor,
+		updateSetting: (value: LynxColor) => void,
+	): void {
+		let previewEl: HTMLElement | null = null;
+
+		new Setting(containerEl)
+			.setName(name)
+			.setDesc(desc)
+			.addDropdown((dropdown) => {
+				for (const { value, label } of LYNX_CSS_COLORS) {
+					dropdown.addOption(value, label);
+				}
+
+				previewEl = dropdown.selectEl.parentElement?.createDiv({
+					cls: 'lynx-color-preview',
+				}) ?? null;
+
+				const updatePreview = (value: LynxColor): void => {
+					previewEl?.style.setProperty('background-color', value);
+				};
+
+				updatePreview(initialValue);
+
+				dropdown
+					.setValue(initialValue)
+					.onChange(async (value) => {
+						const color = value as LynxColor;
+						updateSetting(color);
+						updatePreview(color);
 						await this.plugin.saveSettings();
 					});
 			});

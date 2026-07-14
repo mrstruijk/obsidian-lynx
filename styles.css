@@ -115,3 +115,12 @@
 .lynx-suggestion-title {
 	font-size: var(--font-ui-medium);
 }
+
+.lynx-color-preview {
+	width: 18px;
+	height: 18px;
+	border-radius: var(--radius-s);
+	border: 1px solid var(--background-modifier-border);
+	flex-shrink: 0;
+	margin-left: var(--size-2-2);
+}
