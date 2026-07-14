@@ -1,6 +1,7 @@
 import { App, setIcon, SuggestModal, TFile } from 'obsidian';
 import LynxPlugin from './main';
 import { collectLinks, LinkItem } from './links-collector';
+import { openLinkItem } from './open-link';
 
 const LYNX_LINK_COLOR_VAR = '--lynx-link-color';
 
@@ -53,9 +54,6 @@ export class LynxNotePickerModal extends SuggestModal<LinkItem> {
 
 	onChooseSuggestion(item: LinkItem): void {
 		const currentFile = this.plugin.app.workspace.getActiveFile();
-		void this.plugin.app.workspace.openLinkText(
-			item.path,
-			currentFile?.path ?? '',
-		);
+		void openLinkItem(this.plugin.app, item, currentFile?.path ?? '');
 	}
 }

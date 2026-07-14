@@ -1,6 +1,6 @@
 {
 	"id": "obsidian-lynx",
-	"name": "lynx",
+	"name": "Lynx",
 	"version": "1.0.0",
 	"minAppVersion": "1.7.2",
 	"description": "A comprehensive incoming and outgoing links view for Obsidian notes.",

@@ -1,6 +1,7 @@
 import { ItemView, WorkspaceLeaf, TFile, setIcon, Menu } from 'obsidian';
 import LynxPlugin from './main';
 import { collectLinks, LinkItem } from './links-collector';
+import { openLinkItem } from './open-link';
 import { SortOrder } from './settings';
 
 const LYNX_LINK_COLOR_VAR = '--lynx-link-color';
@@ -148,8 +149,9 @@ export class LynxLinksView extends ItemView {
 
 		row.addEventListener('click', () => {
 			this.pushHistory(item.path);
-			void this.plugin.app.workspace.openLinkText(
-				item.path,
+			void openLinkItem(
+				this.plugin.app,
+				item,
 				this.currentFile?.path ?? '',
 			);
 		});

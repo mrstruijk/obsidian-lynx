@@ -1,7 +1,7 @@
-import { App, MetadataCache, Reference, TFile } from 'obsidian';
+import { App, MetadataCache, ReferenceCache, TFile } from 'obsidian';
 
 interface MetadataCacheInternal extends MetadataCache {
-	getBacklinksForFile(file: TFile): { data: Map<string, Reference[]> } | null;
+	getBacklinksForFile(file: TFile): { data: Map<string, ReferenceCache[]> } | null;
 }
 
 function getLinkBasename(linkText: string): string {
@@ -9,6 +9,11 @@ function getLinkBasename(linkText: string): string {
 	const base = linkText.split(/[#^]/, 1)[0] ?? linkText;
 	const name = base.split('/').pop() ?? base;
 	return name.replace(/\.md$/i, '');
+}
+
+function extractSubpath(linkText: string): string | undefined {
+	const match = linkText.match(/[#^](.+)$/);
+	return match?.[1];
 }
 
 export type LinkType = 'incoming' | 'outgoing';
@@ -21,6 +26,11 @@ export interface LinkItem {
 	file?: TFile;
 	mtime: number;
 	source: 'body' | 'frontmatter';
+	linkSubpath?: string;
+	position?: {
+		start: { line: number; col: number };
+		end: { line: number; col: number };
+	};
 }
 
 export interface LynxCollectorSettings {
@@ -39,7 +49,7 @@ export function collectLinks(
 		const seen = new Set<string>();
 
 		const addOutgoingLinks = (
-			refs: Reference[],
+			refs: (ReferenceCache | { link: string })[],
 			source: 'body' | 'frontmatter',
 		): void => {
 			for (const link of refs) {
@@ -72,23 +82,33 @@ export function collectLinks(
 	const backlinks = (app.metadataCache as MetadataCacheInternal).getBacklinksForFile(file);
 	if (backlinks?.data) {
 		const seen = new Set<string>();
-		for (const [sourcePath] of backlinks.data.entries()) {
-			const key = sourcePath.toLowerCase();
-			if (seen.has(key)) continue;
-			seen.add(key);
-
+		for (const [sourcePath, refs] of backlinks.data.entries()) {
 			const sourceFile = app.vault.getAbstractFileByPath(sourcePath);
 			if (!(sourceFile instanceof TFile)) continue;
 
-			items.push({
-				type: 'incoming',
-				path: sourcePath,
-				displayName: sourceFile.basename,
-				resolved: true,
-				file: sourceFile,
-				mtime: sourceFile.stat.mtime,
-				source: 'body',
-			});
+			for (const ref of refs) {
+				const subpath = extractSubpath(ref.link);
+				const dedupeKey = [
+					sourcePath.toLowerCase(),
+					subpath ?? '',
+					ref.position?.start?.line ?? 0,
+					ref.position?.start?.col ?? 0,
+				].join('|');
+				if (seen.has(dedupeKey)) continue;
+				seen.add(dedupeKey);
+
+				items.push({
+					type: 'incoming',
+					path: sourcePath,
+					displayName: sourceFile.basename,
+					resolved: true,
+					file: sourceFile,
+					mtime: sourceFile.stat.mtime,
+					source: 'body',
+					linkSubpath: subpath,
+					position: ref.position,
+				});
+			}
 		}
 	}
 
